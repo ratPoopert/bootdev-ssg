@@ -2,6 +2,8 @@ import unittest
 
 from inline import (
     split_nodes_delimiter,
+    split_nodes_images,
+    split_nodes_links,
     extract_markdown_images,
     extract_markdown_links
 )
@@ -99,6 +101,73 @@ class TestSplitNodesDelimiter(unittest.TestCase):
                 TextNode("code", TextNodeType.CODE),
             ],
             split_nodes_delimiter(nodes, "`", TextNodeType.CODE)
+        )
+
+
+class TestSplitNodesImage(unittest.TestCase):
+
+    def test_requires_list_of_textnodes(self):
+        with self.assertRaises(ValueError):
+            split_nodes_images(TextNode("alt text",
+                                        TextNodeType.IMAGE,
+                                        "image.png"))
+        with self.assertRaises(ValueError):
+            split_nodes_images(["Just a string"])
+
+    def test_extracts_images(self):
+        self.assertListEqual(
+            [
+                TextNode("alt text", TextNodeType.IMAGE, "image.png"),
+                TextNode("alt text", TextNodeType.IMAGE, "image.png"),
+                TextNode("", TextNodeType.IMAGE, "image.png"),
+                TextNode("These images", TextNodeType.IMAGE, "image.png"),
+                TextNode(" have plain text ", TextNodeType.TEXT),
+                TextNode("between them", TextNodeType.IMAGE, "image.png"),
+            ],
+            split_nodes_images([
+                TextNode("![alt text](image.png)", TextNodeType.TEXT),
+                TextNode("![alt text](image.png)![](image.png)",
+                         TextNodeType.TEXT),
+                TextNode("![These images](image.png)"
+                         + " have plain text "
+                         + "![between them](image.png)", TextNodeType.TEXT)
+            ])
+        )
+
+
+class TestSplitNodesLinks(unittest.TestCase):
+
+    def test_requires_list_of_textnodes(self):
+        with self.assertRaises(ValueError):
+            split_nodes_links(
+                TextNode("click here", TextNodeType.LINK, "index.html")
+            )
+        with self.assertRaises(ValueError):
+            split_nodes_links(["just a string"])
+
+    def test_extracts_links(self):
+        nodes = [
+            TextNode("Just plain text", TextNodeType.TEXT),
+            TextNode("[click here](index.html)", TextNodeType.TEXT),
+            TextNode("[this has](index.html)[multiple links](index.html)",
+                     TextNodeType.TEXT),
+            TextNode("Some plain text with [a link](index.html)",
+                     TextNodeType.TEXT),
+            TextNode("[A link](index.html) with plain text after",
+                     TextNodeType.TEXT),
+        ]
+        self.assertListEqual(
+            [
+                TextNode("Just plain text", TextNodeType.TEXT),
+                TextNode("click here", TextNodeType.LINK, "index.html"),
+                TextNode("this has", TextNodeType.LINK, "index.html"),
+                TextNode("multiple links", TextNodeType.LINK, "index.html"),
+                TextNode("Some plain text with ", TextNodeType.TEXT),
+                TextNode("a link", TextNodeType.LINK, "index.html"),
+                TextNode("A link", TextNodeType.LINK, "index.html"),
+                TextNode(" with plain text after", TextNodeType.TEXT),
+            ],
+            split_nodes_links(nodes)
         )
 
 
