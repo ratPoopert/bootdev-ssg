@@ -2,6 +2,8 @@ import unittest
 
 from inline import (
     split_nodes_delimiter,
+    extract_markdown_images,
+    extract_markdown_links
 )
 from textnode import TextNode, TextNodeType
 
@@ -97,4 +99,84 @@ class TestSplitNodesDelimiter(unittest.TestCase):
                 TextNode("code", TextNodeType.CODE),
             ],
             split_nodes_delimiter(nodes, "`", TextNodeType.CODE)
+        )
+
+
+class TestExtractMarkdownImages(unittest.TestCase):
+    image_text = "![alt text](image.png)"
+    without_alttext = "![](image.png)"
+
+    def test_requires_string(self):
+        with self.assertRaises(ValueError):
+            extract_markdown_images([])
+
+    def test_returns_empty_list_if_no_images(self):
+        self.assertListEqual(
+            [],
+            extract_markdown_images("Just a plain old string")
+        )
+
+    def test_gets_image_url(self):
+        self.assertEqual(
+            "image.png",
+            extract_markdown_images(self.image_text)[0][1]
+        )
+
+    def test_gets_image_alt_text(self):
+        self.assertEqual(
+            "alt text",
+            extract_markdown_images(self.image_text)[0][0]
+        )
+
+    def test_only_gets_image(self):
+        self.assertListEqual(
+            [("alt text", "image.png")],
+            extract_markdown_images(f"Text before {self.image_text} and after")
+        )
+
+    def test_extracts_multiple(self):
+        self.assertListEqual(
+            [("alt text", "image.png"), ("", "image.png")],
+            extract_markdown_images(
+                self.image_text + self.without_alttext)
+        )
+
+
+class TestExtractMarkdownLinks(unittest.TestCase):
+    link_text = "[click here](link.html)"
+    without_text = "[](link.html)"
+    without_url = "[click here]()"
+
+    def test_requires_string(self):
+        with self.assertRaises(ValueError):
+            extract_markdown_links([])
+
+    def test_returns_empty_list_if_no_links(self):
+        self.assertListEqual(
+            [],
+            extract_markdown_links("Just some text")
+        )
+
+    def test_gets_link_text(self):
+        self.assertEqual(
+            "click here",
+            extract_markdown_links(self.link_text)[0][0]
+        )
+
+    def test_gets_link_url(self):
+        self.assertEqual(
+            "link.html",
+            extract_markdown_links(self.link_text)[0][1]
+        )
+
+    def test_gets_multiple(self):
+        self.assertListEqual(
+            [
+                ("click here", "link.html"),
+                ("", "link.html"),
+                ("click here", "")
+            ],
+            extract_markdown_links(self.link_text
+                                   + self.without_text
+                                   + self.without_url)
         )

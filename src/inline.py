@@ -1,4 +1,5 @@
 from functools import reduce
+from re import findall
 
 from textnode import TextNode, TextNodeType
 
@@ -46,3 +47,17 @@ def split_nodes_delimiter(nodes, delimiter, text_type):
                 ))
 
     return result
+
+
+def extract_markdown_images(text):
+    if type(text) is not str:
+        raise ValueError("text must be a string")
+    regex = r"!\[(.*?)\]\((.*?)\)"
+    return findall(regex, text)
+
+
+def extract_markdown_links(text):
+    if type(text) is not str:
+        raise ValueError("text must be a string")
+    regex = r"\[(.*?)\]\((.*?)\)"
+    return findall(regex, text)
