@@ -1,6 +1,7 @@
 import unittest
 
 from inline import (
+    text_to_textnodes,
     split_nodes_delimiter,
     split_nodes_images,
     split_nodes_links,
@@ -8,6 +9,37 @@ from inline import (
     extract_markdown_links
 )
 from textnode import TextNode, TextNodeType
+
+
+class TestTextToTextNodes(unittest.TestCase):
+
+    def test_requires_string(self):
+        with self.assertRaises(ValueError):
+            text_to_textnodes([])
+
+    def test_extracts_textnodes(self):
+        self.assertListEqual(
+            [
+                TextNode("Just some text and some ", TextNodeType.TEXT),
+                TextNode("bold", TextNodeType.BOLD),
+                TextNode(" text and some ", TextNodeType.TEXT),
+                TextNode("italic", TextNodeType.ITALIC),
+                TextNode(" text and some ", TextNodeType.TEXT),
+                TextNode("code", TextNodeType.CODE),
+                TextNode(" and a ", TextNodeType.TEXT),
+                TextNode("link", TextNodeType.LINK, "index.html"),
+                TextNode(" and an ", TextNodeType.TEXT),
+                TextNode("image", TextNodeType.IMAGE, "image.png"),
+            ],
+            text_to_textnodes(" ".join([
+                "Just some text",
+                "and some **bold** text",
+                "and some *italic* text",
+                "and some `code`",
+                "and a [link](index.html)",
+                "and an ![image](image.png)",
+            ]))
+        )
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):

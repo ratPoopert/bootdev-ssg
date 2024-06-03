@@ -4,6 +4,19 @@ from re import findall
 from textnode import TextNode, TextNodeType
 
 
+def text_to_textnodes(text):
+    if type(text) is not str:
+        raise ValueError("text must be a string")
+
+    nodes = [TextNode(text, TextNodeType.TEXT)]
+    nodes = split_nodes_delimiter(nodes, "**", TextNodeType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "*", TextNodeType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextNodeType.CODE)
+    nodes = split_nodes_images(nodes)
+    nodes = split_nodes_links(nodes)
+    return nodes
+
+
 def split_nodes_delimiter(nodes, delimiter, text_type):
 
     if not (
